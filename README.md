@@ -81,23 +81,35 @@ Optional: `fillInput` when image OCR detected a question to paste into the input
 | `GET` | `/get-compensation-levels` | All compensation level docs |
 | static | `/uploads/*` | Uploaded images/audio |
 
-## Folder structure
+## Folder structure & What Each File Does
 
-```
+```text
 Backend/
-├── server.js              # Express app + routes
-├── db.js                  # MongoDB connect
-├── AskAI/
-│   ├── askAI.js           # 7-layer orchestrator
-│   └── pipeline/          # router, context, execute, ui, utils
-├── rules/
-│   ├── token.js           # gptCall + session token tracking
-│   ├── flowTrace.js       # Console pipeline tracing
-│   ├── imageProcessor.js  # Image → guests / routing hint
-│   ├── ocr.js             # Tesseract OCR
-│   ├── levelwise.js       # Member compensation level context
-│   └── agewisepackage.js  # Package queries by age/guest/catalog
-└── uploads/               # Multer uploads (images, audio)
+├── server.js              # Main Express application, sets up HTTP endpoints (/v2/indusites_ai, etc.)
+├── db.js                  # Handles connection to the MongoDB database
+├── chatSessions.js        # Core session logic: creating new sessions, fetching queries, and automatically summarizing them
+├── redisClient.js         # Optional Redis client for fast memory caching (state)
+│
+├── AskAIv2/               # The New V2 AI Architecture
+│   ├── orchestrator.js    # The absolute core of V2. Controls the router (Call 1), picks the domain, and generates answers (Call 2)
+│   ├── bootstrap.js       # Database initialization scripts for V2 collections
+│   ├── redisClient.js     # Fallback wrapper for Redis session caching
+│   │
+│   └── domain/            # Domain-specific logic files
+│       ├── business.js    # Fetches user level/comp rules; prompts AI to act as a Business Coach
+│       ├── general.js     # Fetches basic info; handles greetings, small talk, and out-of-scope steering
+│       ├── guests.js      # Fetches user's guest list; prompts AI to act as a Sales Closer for prospects
+│       └── packages.js    # Fetches health package info; prompts AI to explain tests and benefits clearly
+│
+├── AskAI/                 # (Legacy) The older V1 7-layer orchestrator
+│   └── askAI.js           # Old main entry point
+│
+├── rules/                 # Utilities and older V1 rule helpers
+│   ├── token.js           # Logs GPT tokens used
+│   ├── imageProcessor.js  # Runs OCR on uploaded images to detect questions/guests
+│   └── flowTrace.js       # Console debugger for tracing the pipeline
+│
+└── uploads/               # Local folder where Multer temporarily saves images/audio
 ```
 
 ## AskAI pipeline (summary)
